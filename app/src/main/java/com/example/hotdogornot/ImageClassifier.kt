@@ -19,6 +19,7 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
         tflite = Interpreter(loadModelFile(modelPath, context), tfliteOptions)
     }
 
+
     fun classifyImage(imagePath: String): String {
 
         if (!imageExists(imagePath)) {
@@ -27,17 +28,18 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
 
         // Load and preprocess the image
         val bitmap = loadAndPreprocessImage(imagePath, context)
-        val result = Array(1) { FloatArray(NUM_CLASSES) }
+        val result = Array(1) { FloatArray(1) } // Update the shape to match the model's output
         tflite.run(bitmap, result)
 
         // Interpret the prediction
         val hotDogConfidence = result[0][0]
-        return if (hotDogConfidence > 0.5) {
+        return if (hotDogConfidence < 0.5) {
             "It's a hot dog!"
         } else {
             "It's not a hot dog!"
         }
     }
+
 
     private fun imageExists(imagePath: String): Boolean {
         return try {
@@ -49,18 +51,29 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
     }
 
     private fun loadModelFile(modelPath: String, context: Context): ByteBuffer {
+        val assetManager = context.assets
 
         if (!modelExists(modelPath, context)) {
             throw IOException("Model file not found")
         }
 
-        val fileDescriptor = context.assets.openFd(modelPath)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val modelBuffer = ByteBuffer.allocateDirect(fileDescriptor.length.toInt())
-        inputStream.channel.read(modelBuffer)
-        inputStream.close()
+        val modelDescriptor = assetManager.openFd(modelPath)
+        val modelBuffer = modelDescriptor.createInputStream().use { input ->
+            val length = modelDescriptor.length.toInt()
+            val modelData = ByteArray(length)
+            input.read(modelData)
+
+            val modelBuffer = ByteBuffer.allocateDirect(length)
+            modelBuffer.order(ByteOrder.nativeOrder())
+            modelBuffer.put(modelData)
+            modelBuffer.rewind()
+
+            modelBuffer
+        }
+
         return modelBuffer
     }
+
 
     private fun modelExists(modelPath: String, context: Context): Boolean {
         return try {

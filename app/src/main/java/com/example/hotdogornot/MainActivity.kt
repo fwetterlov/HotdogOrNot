@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         imageClassifier = ImageClassifier(this, "model-72-52.tflite")
 
         // Load and classify an image
-        val imagePath = "hotdog.jpg" // Replace with your image path in the assets folder
+        val imagePath = "nothotdog.jpg" // Replace with your image path in the assets folder
         val result = imageClassifier.classifyImage(imagePath)
         Log.d("ImageClassification ", result) // Log the result to the console
 
