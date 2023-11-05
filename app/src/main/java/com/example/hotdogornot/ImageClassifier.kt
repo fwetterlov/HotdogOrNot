@@ -33,11 +33,10 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
 
         // Interpret the prediction
         val hotDogConfidence = result[0][0]
-        return if (hotDogConfidence < 0.5) {
-            "It's a hot dog!"
-        } else {
-            "It's not a hot dog!"
-        }
+
+        if (hotDogConfidence < 0.5) return "It's a hot dog!"
+        else return "It's not a hot dog!"
+
     }
 
 
@@ -111,7 +110,4 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
         return inputBuffer
     }
 
-    companion object {
-        private const val NUM_CLASSES = 2 // Number of classes (hot dog, not hot dog)
-    }
 }
