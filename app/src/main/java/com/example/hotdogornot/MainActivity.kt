@@ -17,6 +17,8 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,25 +74,25 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // CameraPreview kör kameran
-                CameraPreview(controller = controller, modifier = Modifier.fillMaxSize())
 
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)) {
-                    IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
-                        Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
-                    }
+                CameraPreview(controller = controller, modifier = Modifier.fillMaxSize())
+                Box(modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter){
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center) {
+                        IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
+                            Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
+                        }
+                }
+
 
                 }
 
             }
         }
     }
-
-    private fun resizeBitmap(bitmap: Bitmap, targetWidth: Int, targetHeight: Int): Bitmap {
-        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, false)
-    }
-
 
 
     private fun takePhoto(
@@ -119,9 +121,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun classifyCapturedImage(context: Context, bitmap: Bitmap) {
-        val resizedBitmap = resizeBitmap(bitmap,300,300)
-
-        val result = imageClassifier.classifyImageBitmap(resizedBitmap)
+        val result = imageClassifier.classifyImageBitmap(bitmap)
         Log.d("ImageClassification", "Result: $result")
         Toast.makeText(context, "$result", Toast.LENGTH_LONG).show()
     }
