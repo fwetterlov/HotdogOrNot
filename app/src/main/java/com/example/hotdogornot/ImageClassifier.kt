@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.Log
+import androidx.compose.ui.graphics.asImageBitmap
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.io.IOException
@@ -22,7 +24,7 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
 
     fun classifyImage(imagePath: String): String {
 
-        if (!imageExists(imagePath)) {
+       if (!imageExists(imagePath)) {
             return "Image not found"
         }
 
@@ -35,6 +37,25 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
         val hotDogConfidence = result[0][0]
 
         if (hotDogConfidence < 0.5) return "It's a hot dog!"
+        else return "It's not a hot dog!"
+
+    }
+    fun classifyImageBitmap(bitmap: Bitmap): String {
+
+        val result = Array(1) { FloatArray(1) } // Update the shape to match the model's output
+        val imgBitmap = loadAndPreprocessBitmap(bitmap, context)
+
+        try {
+            tflite.run(imgBitmap, result)
+            // Rest of the code
+        } catch (e: Exception) {
+            Log.e("TFError", "Error during inference: ${e.message}")
+            // Handle the error appropriately
+        }
+        // Interpret the prediction
+        val hotDogConfidence = result[0][0]
+        Log.d("Confidence", "$hotDogConfidence")
+        if (hotDogConfidence < 0.35) return "It's a hot dog!"
         else return "It's not a hot dog!"
 
     }
@@ -107,6 +128,30 @@ class ImageClassifier(private val context: Context, private val modelPath: Strin
             }
         }
 
+        return inputBuffer
+    }
+
+    private fun loadAndPreprocessBitmap(bitmap: Bitmap, context: Context): ByteBuffer {
+
+
+        // Resize the image to 150x150
+        val targetSize = 150
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, false)
+
+        val inputBuffer = ByteBuffer.allocateDirect(4 * targetSize * targetSize * 3)
+        inputBuffer.order(ByteOrder.nativeOrder())
+
+        for (x in 0 until targetSize) {
+            for (y in 0 until targetSize) {
+                val pixel = scaledBitmap.getPixel(x, y)
+                val red = Color.red(pixel).toFloat() / 255.0f
+                val green = Color.green(pixel).toFloat() / 255.0f
+                val blue = Color.blue(pixel).toFloat() / 255.0f
+                inputBuffer.putFloat(red)
+                inputBuffer.putFloat(green)
+                inputBuffer.putFloat(blue)
+            }
+        }
         return inputBuffer
     }
 

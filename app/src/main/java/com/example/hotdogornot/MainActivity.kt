@@ -1,70 +1,120 @@
 package com.example.hotdogornot
 
+import android.Manifest
+import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.camera.core.ImageCapture.OnImageCapturedCallback
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.view.CameraController
+import androidx.camera.view.LifecycleCameraController
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.hotdogornot.ui.theme.HotdogOrNotTheme
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var imageClassifier: ImageClassifier
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ActivityCompat.requestPermissions(
+            this, CAMERAX_PERMISSIONS,0
+        )
+
 
         // Initialize the image classifier
         imageClassifier = ImageClassifier(this, "model-72-52.tflite")
+
         // Load and classify an image
         val result = imageClassifier.classifyImage("hotdog.jpg")
         Log.d("Result: ", result) // Log the result to the console
 
+
         setContent {
             HotdogOrNotTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-
-                    Greeting("Check the logcat for classification!")
-
+                val controller = remember {
+                    LifecycleCameraController(applicationContext).apply {
+                        setEnabledUseCases(
+                            CameraController.IMAGE_CAPTURE
+                        )
+                    }
                 }
+
+                // CameraPreview kör kameran
+
+                CameraPreview(controller = controller, modifier = Modifier.fillMaxSize())
+                Box(modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter){
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center) {
+                        IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
+                            Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
+                        }
+                    }
+                }
+
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Column {
-        Spacer(modifier = Modifier.height(64.dp))
-        Text(
-            text = "Hello $name!",
-            modifier = modifier.then(Modifier.padding(8.dp)), // Add padding to the Text
-            fontSize = 24.sp, // Set the font size to 24sp (you can adjust this as needed)
+
+    private fun takePhoto(
+        controller: LifecycleCameraController,
+        context: Context,
+        onPhotoTaken: (Bitmap) -> Unit
+    ) {
+        controller.takePicture(
+            ContextCompat.getMainExecutor(applicationContext),
+            object : OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    super.onCaptureSuccess(image)
+                    val bitmap = image.toBitmap()
+                    onPhotoTaken(bitmap)
+
+                    classifyCapturedImage(context, bitmap)
+
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    super.onError(exception)
+                    Log.e("Camera", "Could not take photo: ", exception)
+                }
+            }
         )
     }
-}
 
+    private fun classifyCapturedImage(context: Context, bitmap: Bitmap) {
+        val result = imageClassifier.classifyImageBitmap(bitmap)
+        Log.d("ImageClassification", "Result: $result")
+        Toast.makeText(context, "$result", Toast.LENGTH_LONG).show()
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HotdogOrNotTheme {
-        Greeting("Testing")
+    companion object{
+        private val CAMERAX_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA
+        )
     }
 }
