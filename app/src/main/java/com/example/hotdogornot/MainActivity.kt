@@ -2,12 +2,8 @@ package com.example.hotdogornot
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.media.MediaScannerConnection
 import android.os.Bundle
-import android.os.Environment
-import android.text.Layout
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -25,13 +21,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,9 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.hotdogornot.ui.theme.HotdogOrNotTheme
-import java.io.File
-import java.io.FileOutputStream
-
 
 class MainActivity : ComponentActivity() {
 
@@ -85,9 +73,7 @@ class MainActivity : ComponentActivity() {
                         IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
                             Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
                         }
-                }
-
-
+                    }
                 }
 
             }
