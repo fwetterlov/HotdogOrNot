@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.text.Layout
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 Row(modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)) {
-                    IconButton(onClick = { takePhoto(controller = controller) {} }) {
+                    IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
                         Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
                     }
 
@@ -94,6 +95,7 @@ class MainActivity : ComponentActivity() {
 
     private fun takePhoto(
         controller: LifecycleCameraController,
+        context: Context,
         onPhotoTaken: (Bitmap) -> Unit
     ) {
         controller.takePicture(
@@ -104,7 +106,7 @@ class MainActivity : ComponentActivity() {
                     val bitmap = image.toBitmap()
                     onPhotoTaken(bitmap)
 
-                    classifyCapturedImage(bitmap)
+                    classifyCapturedImage(context, bitmap)
 
                 }
 
@@ -116,11 +118,12 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun classifyCapturedImage(bitmap: Bitmap) {
+    private fun classifyCapturedImage(context: Context, bitmap: Bitmap) {
         val resizedBitmap = resizeBitmap(bitmap,300,300)
 
         val result = imageClassifier.classifyImageBitmap(resizedBitmap)
         Log.d("ImageClassification", "Result: $result")
+        Toast.makeText(context, "$result", Toast.LENGTH_LONG).show()
     }
 
     companion object{
