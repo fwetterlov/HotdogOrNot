@@ -70,7 +70,8 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .padding(16.dp),
                         horizontalArrangement = Arrangement.Center) {
-                        IconButton(onClick = { takePhoto(controller = controller, context = applicationContext) {} }) {
+                        IconButton(onClick = {
+                            takePhoto(controller = controller, context = applicationContext){}}) {
                             Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = "Take photo")
                         }
                     }
@@ -91,16 +92,15 @@ class MainActivity : ComponentActivity() {
             object : OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     super.onCaptureSuccess(image)
-                    val bitmap = image.toBitmap()
-                    onPhotoTaken(bitmap)
-
-                    classifyCapturedImage(context, bitmap)
-
-                }
-
-                override fun onError(exception: ImageCaptureException) {
-                    super.onError(exception)
-                    Log.e("Camera", "Could not take photo: ", exception)
+                    try {
+                        val bitmap = image.toBitmap()
+                        onPhotoTaken(bitmap)
+                        classifyCapturedImage(context, bitmap)
+                    } catch (e: Exception) {
+                        Log.e("takePhotoError", "Error: $e")
+                    } finally {
+                        image.close()
+                    }
                 }
             }
         )
