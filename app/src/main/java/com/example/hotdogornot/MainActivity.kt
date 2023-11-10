@@ -3,6 +3,8 @@ package com.example.hotdogornot
 import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -126,6 +128,28 @@ class MainActivity : ComponentActivity() {
         val result = imageClassifier.classifyImageBitmap(bitmap)
         Log.d("ImageClassification", "Result: $result")
         Toast.makeText(context, "$result", Toast.LENGTH_LONG).show()
+        playSoundEffect(context, result)
+
+    }
+
+    private fun playSoundEffect(context: Context, result: String) {
+        val mediaPlayer = MediaPlayer()
+        var uri: Uri? = null
+
+        when (result) {
+            "It's a hot dog!" -> {
+                uri = Uri.parse("android.resource://" + context.packageName + "/" + R.raw.correct_sound)
+            }
+            "It's not a hot dog!" -> {
+                uri = Uri.parse("android.resource://" + context.packageName + "/" + R.raw.wrong_sound)
+            }
+        }
+        
+        uri?.let {
+            mediaPlayer.setDataSource(context, it)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+        }
     }
 
     companion object{
