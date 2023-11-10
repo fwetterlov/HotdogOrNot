@@ -3,7 +3,10 @@ package com.example.hotdogornot
 import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -34,6 +37,7 @@ import com.example.hotdogornot.ui.theme.HotdogOrNotTheme
 class MainActivity : ComponentActivity() {
 
     private lateinit var imageClassifier: ImageClassifier
+    private lateinit var vibrator: Vibrator
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +49,8 @@ class MainActivity : ComponentActivity() {
 
         // Initialize the image classifier
         imageClassifier = ImageClassifier(this, "model-72-52.tflite")
-
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        
         // Load and classify an image
         val result = imageClassifier.classifyImage("hotdog.jpg")
         Log.d("Result: ", result) // Log the result to the console
@@ -80,12 +85,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun vibrate(duration: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            // For older devices without VibrationEffect support
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration)
+        }
+    }
+
 
     private fun takePhoto(
         controller: LifecycleCameraController,
         context: Context,
         onPhotoTaken: (Bitmap) -> Unit
     ) {
+        vibrate(100)
         controller.takePicture(
             ContextCompat.getMainExecutor(applicationContext),
             object : OnImageCapturedCallback() {
